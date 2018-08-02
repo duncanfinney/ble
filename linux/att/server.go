@@ -586,7 +586,7 @@ func (s *Server) handleExecuteWriteRequest(r ExecuteWriteRequest) []byte {
 func (s *Server) handleWriteCommand(r WriteCommand) []byte {
 	// Validate the request.
 	switch {
-	case len(r) <= 3:
+	case len(r) < 3: //3 --> allow empty writes
 		return nil
 	}
 
