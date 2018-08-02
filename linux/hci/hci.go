@@ -115,6 +115,23 @@ type HCI struct {
 
 	err  error
 	done chan bool
+
+	// end-user event handlers
+	onLEConnectionComplete func(evt.LEConnectionComplete, *Conn)
+}
+
+// Conns ...
+func (h *HCI) Conns() []uint16 {
+	ret := []uint16{}
+	for handle := range h.conns {
+		ret = append(ret, handle)
+	}
+	return ret
+}
+
+// SetOnLEConnectionComplete sets the callback when a client connects to the system
+func (h *HCI) SetOnLEConnectionComplete(handler func(evt.LEConnectionComplete, *Conn)) {
+	h.onLEConnectionComplete = handler
 }
 
 // Init ...
@@ -448,6 +465,9 @@ func (h *HCI) handleLEConnectionComplete(b []byte) error {
 	h.muConns.Lock()
 	h.conns[e.ConnectionHandle()] = c
 	h.muConns.Unlock()
+	if h.onLEConnectionComplete != nil {
+		h.onLEConnectionComplete(e, c)
+	}
 	if e.Role() == roleMaster {
 		if e.Status() == 0x00 {
 			select {
